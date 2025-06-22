@@ -1,0 +1,202 @@
+version: "2"
+
+run:
+  issues-exit-code: 1
+  tests: true
+  timeout: 5m
+  modules-download-mode: readonly
+  skip-dirs:
+    - vendor
+    - .git
+    - testdata
+    - examples
+
+linters:
+  enable:
+    - bodyclose
+    - dupl
+    - errcheck
+    - funlen
+    - gochecknoinits
+    - goconst
+    - gocritic
+    - gocyclo
+    - goimports
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - lll
+    - misspell
+    - mnd
+    - nakedret
+    - revive
+    - staticcheck
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - whitespace
+  disable:
+    - depguard
+
+linters-settings:
+  dupl:
+    threshold: 100
+  
+  funlen:
+    lines: 80
+    statements: 40
+  
+  gocognit:
+    min-complexity: 15
+  
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+  
+  gocritic:
+    disabled-checks:
+      - wrapperFunc
+    enabled-tags:
+      - performance
+      - style
+      - experimental
+      - diagnostic
+  
+  gocyclo:
+    min-complexity: 10
+  
+  goimports:
+    local-prefixes: github.com/Gosayram/infra-linter
+  
+  govet:
+    enable:
+      - shadow
+      - fieldalignment
+    settings:
+      printf:
+        funcs:
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
+  
+  lll:
+    line-length: 120
+  
+  misspell:
+    locale: US
+    ignore-words:
+      - linter
+      - dockerfile
+      - makefile
+      - systemd
+  
+  mnd:
+    settings:
+      mnd:
+        checks:
+          - argument
+          - case
+          - condition
+          - operation
+          - return
+          - assign
+        ignored-numbers:
+          - '0'
+          - '1'
+          - '-1'
+        ignored-functions:
+          - 'strings.SplitN'
+          - 'strconv.ParseInt'
+          - 'strconv.ParseFloat'
+  
+  nakedret:
+    max-func-lines: 30
+  
+  revive:
+    severity: warning
+    confidence: 0.8
+    rules:
+      - name: blank-imports
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: dot-imports
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: exported
+      - name: increment-decrement
+      - name: var-naming
+      - name: var-declaration
+      - name: package-comments
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: unexported-return
+      - name: indent-error-flow
+      - name: errorf
+      - name: empty-block
+      - name: superfluous-else
+      - name: unused-parameter
+      - name: unreachable-code
+      - name: redefines-builtin-id
+  
+  staticcheck:
+    checks: ["all"]
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  
+  exclude-rules:
+    # Exclude magic number detection in test files
+    - path: _test\.go
+      linters:
+        - funlen
+        - gocognit
+        - mnd
+        - dupl
+    
+    # Allow init functions in cmd package for CLI setup
+    - path: cmd/
+      linters:
+        - gochecknoinits
+    
+    # Exclude common patterns that are acceptable
+    - path: (.+)\.go$
+      text: "Error return value of .((os\\.)?std(out|err)\\..*)|(.*Close)|(.*Flush)|(os\\.Remove(All)?)|(.*printf?)|(os\\.(Un)?Setenv). is not checked"
+      linters:
+        - errcheck
+    
+    # Allow longer lines in generated files
+    - path: \\.pb\\.go$
+      linters:
+        - lll
+    
+    # Ignore certain issues in test files
+    - path: _test\.go
+      text: "fieldalignment:"
+      linters:
+        - govet
+  
+  exclude-dirs:
+    - vendor
+    - .git
+    - testdata
+    - examples
+  
+  exclude-files:
+    - ".*\\.pb\\.go$"
+    - ".*_generated\\.go$"
+
+output:
+  formats:
+    - format: colored-line-number
+      path: stdout
+  print-issued-lines: true
+  print-linter-name: true
+  uniq-by-line: true
+  sort-results: true 
